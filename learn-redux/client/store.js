@@ -1,10 +1,11 @@
-import { createStore, compse } from 'redux';
+import { createStore, compose } from 'redux';
 import { syncHistoryWithStore } from 'react-router-redux';
 import { browserHistory } from 'react-router';
 
 // import the root reducer
 import rootReducer from './reducers/index';
 
+// get starter data (instead of db data)
 import comments from './data/comments';
 import posts from './data/posts';
 
@@ -14,8 +15,24 @@ const defaultState = {
   comments
 }
 
-const store = createStore(rootReducer, defaultState, window.__REDUX_DEVTOOLS_EXTENSION__ && window.__REDUX_DEVTOOLS_EXTENSION__());
+const enhancers = compose(
+  window.devToolsExtension ? window.devToolsExtension() : f => f
+);
+
+const store = createStore(
+  rootReducer,
+  defaultState,
+  // window.__REDUX_DEVTOOLS_EXTENSION__ && window.__REDUX_DEVTOOLS_EXTENSION__()
+  enhancers
+);
 
 export const history = syncHistoryWithStore(browserHistory, store);
+
+if(module.hot) {
+  module.hot.accept('./reducers/', () => {
+    const nextRootReducer = require('./reducers/index').default;
+    store.replaceReducer(nextRootReducer);
+  });
+}
 
 export default store;
